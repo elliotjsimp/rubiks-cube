@@ -1,6 +1,7 @@
 import { Cube } from './cube';
 import { Cubie } from './cubie';
 import type { Face, Color, Vec3 } from './cubie';
+import { getLocalFace } from './inverse-rotation';
 
 // Map to go from 2D unwrapped position on a face to 3D position
 const FACE_POSITION_MAP: Record<Face, (row: number, col: number) => Vec3> = {
@@ -13,8 +14,8 @@ const FACE_POSITION_MAP: Record<Face, (row: number, col: number) => Vec3> = {
 };
 
 // Function to print 2D representation of 3D Cube.
-// NOTE: Currently only works for solved Cube (the initial state).
-// TODO: Make work for any Cube state when implemented/implementing Cube moves.
+// NOTE: Implemented getLocalFace in inverse-rotation.ts, 
+// so now should hypothetically work for any Cube state
 export function printCube(cube: Cube) {
     const cubeGrid: string[][][] = getCubeGrid(cube);
     // Face indices: 0=up, 1=left, 2=front, 3=right, 4=back, 5=down
@@ -93,28 +94,43 @@ function getFaceGrid(cube: Cube, face: Face): string[][] {
             
             // NOTE: The following is not great time-complexity-wise, 
             // but fine because this is just for debugging/basic visualization.
+            // TODO: Fix, if can...
             const cubie: Cubie | undefined = cube.cubies.find(c =>
                 c.position[0] === position[0] &&
                 c.position[1] === position[1] &&
                 c.position[2] === position[2]
             );
 
+            // Some checks
             if (!cubie) {
                 throw new Error(`Cubie not found at position ${position}!`);
             }
-
+            if (!cubie.orientation) {
+                throw new Error(`cubie.orientation was not found!`);
+            }
             if (!cubie.faceColors[face]) {
                 throw new Error(`cubie.faceColors[face] not found at position: ${position}, face: ${face}!`);
             }
+            
+            // TODO: Refactor to consider Cubie rotation matrix field, once implemented.
 
-            // NOTE: The following only will work for solved (i.e., initial) state Cube, pretty sure.
-            // TODO: Update this to work with any Cube state.
-            // Can do the following line if Cubie has [0, 0, 0] orientation.
-            rowArray.push(cubie.faceColors[face] as Color);
+            // If default orientation, Cubie is in solved state.
+            // Thefore, the Cubie relative (local) mapping of color
+            // matches the Cube relative (global) mapping of color for the desired Face.
+            if (cubie.orientation.every(angle => angle === 0)) {
+                rowArray.push(cubie.faceColors[face] as Color);
+            } else {
+
+                // Compute inverse rotation matricies to obtain the equivalent local,
+                // i.e. Cubie relative Face to that of the desired global, 
+                // i.e. Cube relative Face.
+                // TODO: Improve clarity of documentation of this block, and in inverse-rotation.ts entirely.
+
+                const localFace = getLocalFace(cubie.orientation, face);
+                rowArray.push(cubie.faceColors[localFace] as Color);
+            }
         }
         faceGrid.push(rowArray);
     }
     return faceGrid;
 }
-
-
