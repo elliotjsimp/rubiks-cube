@@ -5,15 +5,15 @@ export class Cube {
     // A map that describes the relationship from
     // axis to position to FaceColors for a Cubie on a solved Cube.
     static readonly FACE_COLOR_SOLVED_MAP: { [key: number]: { [key: string]: { face: Face, color: Color } } } = {
-        0: { // x axis
+        0: { // x-axis
           "-1": { face: 'left',  color: 'orange' },
            "1": { face: 'right', color: 'red'    }
         },
-        1: { // y axis
+        1: { // y-axis
           "-1": { face: 'back',  color: 'blue'   },
            "1": { face: 'front', color: 'green'  }
         },
-        2: { // z axis
+        2: { // z-axis
           "-1": { face: 'down',  color: 'yellow' },
            "1": { face: 'up',    color: 'white'  }
         }
