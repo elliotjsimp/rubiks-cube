@@ -10,7 +10,7 @@ function App() {
 
         // Create scene
         const scene = new THREE.Scene()
-        const fov = 45;
+        const fov = 35;
         const aspect = 2;
         const near = 0.1; // Clipping bounds
         const far = 100;
@@ -72,28 +72,32 @@ function App() {
         
         // Animation loop
         function animate() {
-            // Smoothly return camera to default position
-            // NOTE: This is kind of bad... maybe should make it only when user clicks Reset Orientation or something?
+            // Smoothly return camera to default position (preserve horizontal rotation; doesn't matter for default position reset)
             if (isReturningToDefault) {
-                camera.position.lerp(defaultCameraPosition, 0.005);
-                controls.target.lerp(defaultTarget, 0.005);
-                controls.update();
-
-                // Stop returning once BOTH are close enough
-                const cameraClose = camera.position.distanceTo(defaultCameraPosition) < 0.01;
-                const targetClose = controls.target.distanceTo(defaultTarget) < 0.01;
+                // Get current horizontal angle around the cube
+                const offset = new THREE.Vector3().subVectors(camera.position, controls.target);
+                const horizontalAngle = Math.atan2(offset.x, offset.z);
                 
-                if (cameraClose && targetClose) {
+                // Calculate target position: same angle, default height & distance
+                const defaultDist = Math.sqrt(defaultCameraPosition.x ** 2 + defaultCameraPosition.z ** 2);
+                const targetPos = new THREE.Vector3(
+                    Math.sin(horizontalAngle) * defaultDist,
+                    defaultCameraPosition.y,
+                    Math.cos(horizontalAngle) * defaultDist
+                );
+                
+                camera.position.lerp(targetPos, 0.025);
+                controls.update();
+                
+                if (camera.position.distanceTo(targetPos) < 0.01) {
                     isReturningToDefault = false;
-                    // Snap to exact position to avoid drift
-                    camera.position.copy(defaultCameraPosition);
-                    controls.target.copy(defaultTarget);
-                    controls.update();
                 }
             }
+            
             if (isIdleAnimating) {
-                cube.rotation.y += 0.004;
+                cube.rotation.y += 0.0035;
             }
+            
             renderer.render(scene, camera);
         }
         renderer.setAnimationLoop(animate)
