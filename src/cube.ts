@@ -53,12 +53,15 @@ export class Cube {
 
                     }
 
-                    // Note: Could assert expected length of FaceColors makes sense based on position here.
+                    // NOTE: Could assert expected length of FaceColors makes sense based on position here.
+                    // i.e., if corner, length of FaceColors is 3.
 
-                    // Orientation for every Cubie in a solved Cube is [0, 0, 0]
-                    // Create both array's with different references.
-                    this.cubies.push(new Cubie(position, [0, 0, 0], faceColors));
-                    this.solvedState.push(new Cubie([...position], [0, 0, 0], {...faceColors}));
+                    // A Cubie is created with identity rotation matrix in constructor, 
+                    // as a Cube is always created in solved state.
+                    
+                    // Create both arrays with different references.
+                    this.cubies.push(new Cubie(position, faceColors));
+                    this.solvedState.push(new Cubie([...position], {...faceColors}));
 
                 }
             }
