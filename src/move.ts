@@ -13,6 +13,16 @@ export type CubeMove =
   | 'F'   | 'F_p'    // Front, Front prime
   | 'B'   | 'B_p'    // Back, Back prime
 
+// Array of possible moves
+export const ALL_MOVES: readonly CubeMove[] = [
+  'U', 'U_p',
+  'D', 'D_p',
+  'L', 'L_p',
+  'R', 'R_p',
+  'F', 'F_p',
+  'B', 'B_p'
+];
+
 // Map from CubeMove to Face
 // NOTE: This feels a bit silly...
 const CUBEMOVE_FACE_MAP: Record<CubeMove, Face> = {
