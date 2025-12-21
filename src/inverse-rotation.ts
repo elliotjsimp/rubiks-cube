@@ -22,46 +22,14 @@ for (const [face, vec] of Object.entries(FACE_UNITVEC_MAP) as [Face, Vec3][]) {
     UNITVEC_FACE_MAP[JSON.stringify(vec)] = face;
 }
 
-// Given a Cubie's current orientation (as [x, y, z] rotation angles from solved state),
-// and a Cube relative (global) Face (e.g. 'front', 'up'), 
-// this function computes which local Face of the Cubie currently occupies that Cube face.
-// This lets us look up the correct color for visualization in print-cube.ts.
-// In other words: "Which face of this Cubie is showing on this global Cube face after applying the Cubie's orientation?"
+// Given a Cubie's rotation matrix (relative to solved state) and a global Cube face,
+// this function computes which local face of the Cubie occupies that Cube face.
+// This lets us look up the correct face color for visualization.
+// Currently only used in print-cube.ts (2D tester visualization)
+export function getLocalFace(rotation: math.Matrix, globalFace: Face): Face {
 
-// TODO: Refactor function, after refactoring Cubie class to use rotation matrix directly instead of orientation: Vec3
-// We need to do this to properly calculate inverse matrix (right now, we wrongly assume that moves follow sequence x, y, z,
-// and then stop I suppose... will fix tomorrow!)
-export function getLocalFace(orientation: Vec3, globalFace: Face): Face {
-    const [rx, ry, rz] = orientation;
-
-    // TODO: We will delete these individual computations in favor of
-    // the transpose (inverse) of the cubie.rotation matrix field (replacing the orientation field)
-
-    // Inverse rotation matrix about the x-axis
-    const RxInv = math.matrix([
-        [1, 0, 0],
-        [0, Math.cos(-rx), -Math.sin(-rx)],
-        [0, Math.sin(-rx), Math.cos(-rx)]
-    ]);
-
-    // About the y-axis
-    const RyInv = math.matrix([
-        [Math.cos(-ry), 0, Math.sin(-ry)],
-        [0, 1, 0],
-        [-Math.sin(-ry), 0, Math.cos(-ry)]
-    ]);
-
-    // About the z-axis
-    const RzInv = math.matrix([
-        [Math.cos(-rz), -Math.sin(-rz), 0],
-        [Math.sin(-rz), Math.cos(-rz), 0],
-        [0, 0, 1]
-    ]);
-    
-    // TODO: Delete this.
-    // Final inverse rotation matrix: sequentially apply inverse rotations Z, Y, then X (rotation order ZYX)
-    // R_inv = RxInv * RyInv * RzInv (right-to-left: Rz, then Ry, then Rx)
-    const RInv = math.multiply(math.multiply(RxInv, RyInv), RzInv);
+    // Inverse rotation matrix is transpose of Cubie's rotation matrix 
+    const RInv = math.transpose(rotation);
 
     // The Face that we are trying to find the 2D representation of, as a unit vector
     const globalVec: Vec3 = FACE_UNITVEC_MAP[globalFace];
@@ -76,8 +44,9 @@ export function getLocalFace(orientation: Vec3, globalFace: Face): Face {
         Math.round(localDir.get([2]))
     ];
 
-    return UNITVEC_FACE_MAP[JSON.stringify(localVec)];
+    const face: Face = UNITVEC_FACE_MAP[JSON.stringify(localVec)];
+    if (face) return face;
 
-    // throw new Error('No matching face found!');
+    throw new Error(`Face was not found with unit vector ${localVec}`)
 }
 
