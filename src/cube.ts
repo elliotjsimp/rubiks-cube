@@ -1,14 +1,16 @@
 import { Cubie } from './cubie';
 import type { Vec3, Face, Color, FaceColors } from './cubie';
 import { FACE_COLOR_SOLVED_MAP } from './face-utils';
+import * as move from './move';
+import * as math from 'mathjs';
 
 export class Cube {
     public cubies: Cubie[];
-    public solvedState: Cubie[];
+    public solvedStateCubies: Cubie[];
 
     public constructor() {
         this.cubies = [];
-        this.solvedState = [];
+        this.solvedStateCubies = [];
         this.initializeSolvedCubies();
     }
 
@@ -45,7 +47,7 @@ export class Cube {
                     
                     // Create both arrays with different references.
                     this.cubies.push(new Cubie(position, faceColors));
-                    this.solvedState.push(new Cubie([...position], {...faceColors}));
+                    this.solvedStateCubies.push(new Cubie([...position], {...faceColors}));
 
                 }
             }
@@ -53,4 +55,30 @@ export class Cube {
 
         return cubies;
     }
+
+    public isSolved(): boolean {
+        for (let i = 0; i < this.cubies.length; i++) {
+            const cubie = this.cubies[i];
+            const solvedCubie = this.solvedStateCubies[i];
+
+            for (let p = 0; p < 3; p++) {
+                if (cubie.position[p] !== solvedCubie.position[p]) return false;
+            }
+
+            if (!math.deepEqual(cubie.rotation, math.identity(3))) return false;
+        }
+        return true;
+    }
+
+    public scramble(numMoves: number = 25) {
+        for (let i = 0; i < numMoves; i++) {
+            // Choose a random move
+            const randomMove: move.CubeMove = move.ALL_MOVES[
+                Math.floor(Math.random() * move.ALL_MOVES.length)
+            ];
+            move.doMove(this, randomMove);
+        }
+    }
+
+
 }
