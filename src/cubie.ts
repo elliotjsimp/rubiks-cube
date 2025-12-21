@@ -1,3 +1,5 @@
+import * as math from 'mathjs';
+
 export type Vec3 = [number, number, number];
 export type Color = 'orange' | 'red' | 'blue' | 'green' | 'yellow' | 'white';
 export type Face = 'left'  | 'right' | 'back' | 'front' | 'down' | 'up';
@@ -17,16 +19,16 @@ export class Cubie {
     // Note: consider position = [x (left/right), y (back/front), z (down/up)]
     public position: Vec3;
 
-    // TODO: Replace with rotation matrix field.
-    // The orientation from the solved position [0, 0, 0] of each Cubie.
-    public orientation: Vec3;
+    // New field: rotation matrix, initialized as identity matrix.
+    public rotation: math.Matrix;
 
     // The colors of the faces of the Cubie in solved (i.e. relative/local) position.
     public faceColors: FaceColors;
 
-    public constructor(position: Vec3, orientation: Vec3, faceColors: FaceColors) {
+    public constructor(position: Vec3, faceColors: FaceColors) {
         this.position = position;
-        this.orientation = orientation;
+        // NOTE: This syntax below might not be quite right/best...
+        this.rotation = math.identity(3) as math.Matrix;
         this.faceColors = faceColors;
     }
     
