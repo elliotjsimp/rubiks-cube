@@ -1,18 +1,6 @@
 import type { Vec3, Face } from './cubie'
+import { FACE_UNITVEC_MAP } from './face-utils';
 import * as math from 'mathjs';
-
-// Map from Face to unit vector
-// NOTE: I feel like I might have 1 or 2 too many "FACE_[to something]" maps in my project...
-// Maybe I could consolidate some?
-// Although, it isn't like there is a milion values in each or anything...
-const FACE_UNITVEC_MAP: Record<Face, Vec3>  = {
-    up:    [0,0,1],
-    down:  [0,0,-1],
-    left:  [-1,0,0],
-    right: [1,0,0],
-    back:  [0,-1,0],
-    front: [0,1,0]
-}
 
 // Initialize the reversed map
 const UNITVEC_FACE_MAP: Record<string, Face> = {};
@@ -49,4 +37,3 @@ export function getLocalFace(rotation: math.Matrix, globalFace: Face): Face {
 
     throw new Error(`Face was not found with unit vector ${localVec}`)
 }
-

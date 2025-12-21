@@ -1,24 +1,8 @@
 import { Cubie } from './cubie';
 import type { Vec3, Face, Color, FaceColors } from './cubie';
+import { FACE_COLOR_SOLVED_MAP } from './face-utils';
 
 export class Cube {
-    // A map that describes the relationship from
-    // axis to position to FaceColors for a Cubie on a solved Cube.
-    static readonly FACE_COLOR_SOLVED_MAP: { [key: number]: { [key: string]: { face: Face, color: Color } } } = {
-        0: { // x-axis
-          "-1": { face: 'left',  color: 'orange' },
-           "1": { face: 'right', color: 'red'    }
-        },
-        1: { // y-axis
-          "-1": { face: 'back',  color: 'blue'   },
-           "1": { face: 'front', color: 'green'  }
-        },
-        2: { // z-axis
-          "-1": { face: 'down',  color: 'yellow' },
-           "1": { face: 'up',    color: 'white'  }
-        }
-      };
-
     public cubies: Cubie[];
     public solvedState: Cubie[];
 
@@ -46,7 +30,7 @@ export class Cube {
                     
                     // Determine faceColors
                     for (let axis = 0; axis < 3; axis++) {
-                        const mapping = Cube.FACE_COLOR_SOLVED_MAP[axis]?.[position[axis]];
+                        const mapping = FACE_COLOR_SOLVED_MAP[axis]?.[position[axis]];
                         if (mapping) {
                             faceColors[mapping.face as Face] = mapping.color as Color;
                         }
@@ -69,5 +53,4 @@ export class Cube {
 
         return cubies;
     }
-
 }

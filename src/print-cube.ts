@@ -2,17 +2,8 @@ import { Cube } from './cube';
 import { Cubie } from './cubie';
 import type { Face, Color, Vec3 } from './cubie';
 import { getLocalFace } from './inverse-rotation';
+import { FACE_POSITION_MAP } from './face-utils';
 import * as math from 'mathjs';
-
-// Map to go from 2D unwrapped position on a face to 3D position
-const FACE_POSITION_MAP: Record<Face, (row: number, col: number) => Vec3> = {
-    up:    (r, c) => [c - 1, r - 1, 1],
-    down:  (r, c) => [c - 1, -(r - 1), -1],
-    left:  (r, c) => [-1, c - 1, -(r - 1)],
-    right: (r, c) => [1, -(c - 1), -(r - 1)],
-    front: (r, c) => [c - 1, 1, -(r - 1)],
-    back:  (r, c) => [-(c - 1), -1, -(r - 1)],
-};
 
 // Function to print 2D representation of 3D Cube.
 // NOTE: Fixed inverse-rotation.ts and cubie.ts to use cubie.rotation (rotation matrix),
