@@ -18,7 +18,7 @@ export class Cube {
     private initializeSolvedCubies(): Cubie[] {
         let cubies: Cubie[] = [];
         let position: Vec3;
-        let faceColors: FaceColors = {};
+        let faceColors: FaceColors;
         
         // For all Cubie positions on the Cube (26 unique Cubies)
         for (let x = -1; x <= 1; x++) {
@@ -29,6 +29,7 @@ export class Cube {
                     if (x == 0 && y == 0 && z == 0) continue;
 
                     position = [x, y, z];
+                    faceColors = {};
                     
                     // Determine faceColors
                     for (let axis = 0; axis < 3; axis++) {
@@ -79,6 +80,5 @@ export class Cube {
             move.doMove(this, randomMove);
         }
     }
-
 
 }
