@@ -6,13 +6,18 @@ import { createCubieMesh } from './create-cubie-mesh';
 
 function App() {
     const containerRef = useRef<HTMLDivElement>(null)
+    
+    // Refs to store cube state and ThreeJS objects
+    const cubeRef = useRef<Cube | null>(null);
+    const cubeGroupRef = useRef<THREE.Group | null>(null);
 
+    // ThreeJS setup
     useEffect(() => {
         if (!containerRef.current) return
 
         // Create scene
         const scene = new THREE.Scene()
-        const fov = 45;
+        const fov = 55;
         const aspect = 2;
         const near = 0.1; // Clipping bounds
         const far = 100;
@@ -35,16 +40,17 @@ function App() {
 
         // Create Rubik's Cube
         const rubiksCube = new Cube();
-        // rubiksCube.scramble();
+        cubeRef.current = rubiksCube;
         
         // Create a parent group for the entire cube
         const cubeGroup = new THREE.Group();
+        cubeGroupRef.current = cubeGroup;
         scene.add(cubeGroup);
 
         // Create mesh groups for all 26 cubies
         rubiksCube.cubies.forEach(cubie => {
             const cubieGroup = createCubieMesh(cubie);
-            cubeGroup.add(cubieGroup);  // Add to cubeGroup, not scene directly
+            cubeGroup.add(cubieGroup);
         });
 
         // Add orbital controls
@@ -67,13 +73,13 @@ function App() {
             }
         };
             
-        // Resume idle animation after 3 seconds of inactivity
+        // Resume idle animation after 8 seconds of inactivity
         const onControlsEnd = () => {
             if (idleTimeout) clearTimeout(idleTimeout);
             idleTimeout = window.setTimeout(() => {
                 isIdleAnimating = true;
                 isReturningToDefault = true;
-            }, 3000); // 3 seconds
+            }, 8000); // 8 seconds
         };
         
         // Listen for OrbitControls events
