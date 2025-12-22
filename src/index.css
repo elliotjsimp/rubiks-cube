@@ -22,5 +22,5 @@ canvas {
     font-weight: bold;
     letter-spacing: 1px;
     padding: 16px 0;
-    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+    font-family: system-ui, -apple-system, sans-serif;
 }
