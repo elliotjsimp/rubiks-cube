@@ -1,12 +1,14 @@
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import type { Cubie, Face, Color } from './cubie';
-import { COLOR_HEX_MAP, CUBIE_SIZE, STICKER_SIZE, STICKER_OFFSET, CUBIE_SPACING } from './constants';
+import { COLOR_HEX_MAP, CUBIE_SIZE, CUBIE_RADIUS, CUBIE_SEGMENTS, 
+    STICKER_SIZE, STICKER_RADIUS, STICKER_OFFSET, CUBIE_SPACING } from './constants';
 
 export function createCubieMesh(cubie: Cubie): THREE.Group {
     const group = new THREE.Group();
 
-    // Black Cubie core
-    const coreGeo = new THREE.BoxGeometry(CUBIE_SIZE, CUBIE_SIZE, CUBIE_SIZE);
+    // Black Cubie core (rounded)
+    const coreGeo = new RoundedBoxGeometry(CUBIE_SIZE, CUBIE_SIZE, CUBIE_SIZE, CUBIE_SEGMENTS, CUBIE_RADIUS);
     const coreMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
     const core = new THREE.Mesh(coreGeo, coreMat);
     group.add(core);
@@ -46,7 +48,7 @@ export function createCubieMesh(cubie: Cubie): THREE.Group {
 }
 
 function createSticker(face: Face, color: Color): THREE.Mesh {
-    const geometry = new THREE.PlaneGeometry(STICKER_SIZE, STICKER_SIZE);
+    const geometry = createRoundedRectGeometry(STICKER_SIZE, STICKER_SIZE, STICKER_RADIUS);
     const material = new THREE.MeshBasicMaterial({
         color: COLOR_HEX_MAP[color] as number,
         side: THREE.DoubleSide
@@ -56,6 +58,42 @@ function createSticker(face: Face, color: Color): THREE.Mesh {
     positionAndRotateSticker(sticker, face);
 
     return sticker;
+}
+
+// Creates a rounded rectangle geometry using THREE.Shape
+function createRoundedRectGeometry(width: number, height: number, radius: number): THREE.ShapeGeometry {
+    const shape = new THREE.Shape();
+    
+    const halfW = width / 2;
+    const halfH = height / 2;
+    
+    // Clamp radius to avoid invalid shapes
+    const r = Math.min(radius, halfW, halfH);
+    
+    // Start at bottom-left corner (after the radius)
+    shape.moveTo(-halfW + r, -halfH);
+    
+    // Bottom edge
+    shape.lineTo(halfW - r, -halfH);
+    // Bottom-right corner
+    shape.quadraticCurveTo(halfW, -halfH, halfW, -halfH + r);
+    
+    // Right edge
+    shape.lineTo(halfW, halfH - r);
+    // Top-right corner
+    shape.quadraticCurveTo(halfW, halfH, halfW - r, halfH);
+    
+    // Top edge
+    shape.lineTo(-halfW + r, halfH);
+    // Top-left corner
+    shape.quadraticCurveTo(-halfW, halfH, -halfW, halfH - r);
+    
+    // Left edge
+    shape.lineTo(-halfW, -halfH + r);
+    // Bottom-left corner
+    shape.quadraticCurveTo(-halfW, -halfH, -halfW + r, -halfH);
+    
+    return new THREE.ShapeGeometry(shape);
 }
 
 // Position stickers directly in ThreeJS coordinate system
