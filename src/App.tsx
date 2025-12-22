@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import { Cube } from './cube';
+import { createCubieMesh } from './create-cubie-mesh';
 
 function App() {
     const containerRef = useRef<HTMLDivElement>(null)
@@ -10,7 +12,7 @@ function App() {
 
         // Create scene
         const scene = new THREE.Scene()
-        const fov = 35;
+        const fov = 45;
         const aspect = 2;
         const near = 0.1; // Clipping bounds
         const far = 100;
@@ -31,11 +33,19 @@ function App() {
         const canvas = renderer.domElement;
         containerRef.current.appendChild(canvas)
 
-        // Create cube
-        const geometry = new THREE.BoxGeometry(1, 1, 1)
-        const material = new THREE.MeshBasicMaterial({ color: 0x000000 })
-        const cube = new THREE.Mesh(geometry, material)
-        scene.add(cube)
+        // Create Rubik's Cube
+        const rubiksCube = new Cube();
+        // rubiksCube.scramble();
+        
+        // Create a parent group for the entire cube
+        const cubeGroup = new THREE.Group();
+        scene.add(cubeGroup);
+
+        // Create mesh groups for all 26 cubies
+        rubiksCube.cubies.forEach(cubie => {
+            const cubieGroup = createCubieMesh(cubie);
+            cubeGroup.add(cubieGroup);  // Add to cubeGroup, not scene directly
+        });
 
         // Add orbital controls
         const controls = new OrbitControls(camera, canvas);
@@ -86,6 +96,7 @@ function App() {
                     Math.cos(horizontalAngle) * defaultDist
                 );
                 
+                // Move camera smoothly to target position
                 camera.position.lerp(targetPos, 0.025);
                 controls.update();
                 
@@ -95,7 +106,8 @@ function App() {
             }
             
             if (isIdleAnimating) {
-                cube.rotation.y += 0.0035;
+                // Rotate the entire cube group
+                cubeGroup.rotation.y += 0.0035;
             }
             
             renderer.render(scene, camera);
