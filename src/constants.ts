@@ -13,7 +13,10 @@ export const COLOR_HEX_MAP: Record<Color, number> = {
 // Cubie sizing constants
 // NOTE: Numbers kind of magic: arrived at by fiddling with them. Probably will change more.
 export const CUBIE_SIZE = 0.999;     // Size of a black Cubie itself
-export const STICKER_SIZE = 0.87;    // Size of the colored stickers, less than CUBIE_SIZE so "border"
+export const CUBIE_RADIUS = 0.08;    // Corner radius for rounded cubie body
+export const CUBIE_SEGMENTS = 3;     // Smoothness of cubie corners (higher = smoother)
+export const STICKER_SIZE = 0.82;    // Size of the colored stickers, less than CUBIE_SIZE so "border"
+export const STICKER_RADIUS = 0.12;  // Corner radius for rounded stickers
 export const STICKER_OFFSET = 0.5;   // Distance from cubie center to sticker
 // NOTE: This is cool to adjust, could make a slider for it or something.
 export const CUBIE_SPACING = 1; // Spacing between cubies
