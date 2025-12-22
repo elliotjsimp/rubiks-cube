@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
-import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 import { Cube } from './cube';
 import { createCubieMesh } from './create-cubie-mesh';
 
@@ -53,63 +53,26 @@ function App() {
             cubeGroup.add(cubieGroup);
         });
 
-        // Add orbital controls
-        const controls = new OrbitControls(camera, canvas);
-        controls.target.set(defaultTarget.x, defaultTarget.y, defaultTarget.z); 
-        controls.update();
-
-        // Track idle animation and return camera to default state flags
+        // Add trackball controls (allows free rotation in any direction)
+        const controls = new TrackballControls(camera, canvas);
+        controls.target.set(defaultTarget.x, defaultTarget.y, defaultTarget.z);
+        controls.rotateSpeed = 3.0;
+        controls.noZoom = false;
+        controls.noPan = true; // Keep focus on the cube
+        
+        // Track idle animation; plays at start, stops permanently on first interaction
         let isIdleAnimating = true;
-        let isReturningToDefault = false;
-        let idleTimeout: number | null = null;
        
-        // Stop idle animation when user starts interacting
+        // Stop idle animation permanently when user starts interacting
         const onControlsStart = () => {
             isIdleAnimating = false;
-            isReturningToDefault = false;
-            if (idleTimeout) {
-                clearTimeout(idleTimeout);
-                idleTimeout = null;
-            }
-        };
-            
-        // Resume idle animation after 8 seconds of inactivity
-        const onControlsEnd = () => {
-            if (idleTimeout) clearTimeout(idleTimeout);
-            idleTimeout = window.setTimeout(() => {
-                isIdleAnimating = true;
-                isReturningToDefault = true;
-            }, 8000); // 8 seconds
         };
         
-        // Listen for OrbitControls events
         controls.addEventListener('start', onControlsStart);
-        controls.addEventListener('end', onControlsEnd);
         
         // Animation loop
         function animate() {
-            // Smoothly return camera to default position (preserve horizontal rotation; doesn't matter for default position reset)
-            if (isReturningToDefault) {
-                // Get current horizontal angle around the cube
-                const offset = new THREE.Vector3().subVectors(camera.position, controls.target);
-                const horizontalAngle = Math.atan2(offset.x, offset.z);
-                
-                // Calculate target position: same angle, default height & distance
-                const defaultDist = Math.sqrt(defaultCameraPosition.x ** 2 + defaultCameraPosition.z ** 2);
-                const targetPos = new THREE.Vector3(
-                    Math.sin(horizontalAngle) * defaultDist,
-                    defaultCameraPosition.y,
-                    Math.cos(horizontalAngle) * defaultDist
-                );
-                
-                // Move camera smoothly to target position
-                camera.position.lerp(targetPos, 0.025);
-                controls.update();
-                
-                if (camera.position.distanceTo(targetPos) < 0.01) {
-                    isReturningToDefault = false;
-                }
-            }
+            controls.update(); // TrackballControls requires update() in animation loop
             
             if (isIdleAnimating) {
                 // Rotate the entire cube group
@@ -133,8 +96,7 @@ function App() {
         return () => {
             window.removeEventListener('resize', handleResize)
             controls.removeEventListener('start', onControlsStart);
-            controls.removeEventListener('end', onControlsEnd);
-            if (idleTimeout) clearTimeout(idleTimeout);
+            controls.dispose();
             renderer.setAnimationLoop(null)
             if (containerRef.current && canvas.parentNode) {
                canvas.parentNode.removeChild(canvas)
