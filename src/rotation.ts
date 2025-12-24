@@ -1,59 +1,64 @@
 import { Cube } from './cube';
 import { Cubie } from './cubie';
-import type { Face, Vec3 } from './cubie';
-import { FACE_UNITVEC_MAP, FACE_AXIS_INDEX_MAP} from './face-utils';
+import type { Vec3 } from './cubie';
 import * as math from 'mathjs';
 
-// Function to handle rotating a Face of the Cube, given theta (a multiple of 90).
-export function rotateFace(cube: Cube, face: Face, theta: number) {
-    // theta is relative to the CubeMove, i.e. the Face itself. See file move.ts
-    if (theta % 90 != 0) throw new Error(`The angle ${theta} is not a multiple of 90 degrees!`);
-    
-    const faceIndex: number = FACE_AXIS_INDEX_MAP[face];
-    const faceUnitVec: Vec3 = FACE_UNITVEC_MAP[face];
-    const faceSign: number = faceUnitVec[faceIndex]; // -1 or 1
+// Axis unit vectors in logical coordinate system (x=right, y=front, z=up)
+const AXIS_VECTORS: Vec3[] = [
+    [1, 0, 0],  // X axis
+    [0, 1, 0],  // Y axis  
+    [0, 0, 1],  // Z axis
+];
 
-    if (faceSign === 0) throw new Error(`faceSign === 0, which doesn't make sense! 
-        faceIndex = ${faceIndex}, faceUnitVec = ${faceUnitVec}`);
-
-    // Don't need to (potentially) negate theta, math.rotationMatrix handles negative axis.
+// Function to handle rotating a layer of the Cube, given theta (a multiple of 90).
+// axis: 0=X, 1=Y, 2=Z
+// layer: -1, 0, or 1 (position along the axis)
+export function rotateLayer(cube: Cube, axis: 0 | 1 | 2, layer: -1 | 0 | 1, theta: number) {
+    if (theta % 90 !== 0) {
+        throw new Error(`The angle ${theta} is not a multiple of 90 degrees!`);
+    }
     
-    // The cubies to be rotated
-    const cubiesOfFace: Cubie[] = getCubiesOfFace(cube, faceIndex, faceSign);
+    const axisVec: Vec3 = AXIS_VECTORS[axis];
+    
+    // Get cubies in this layer
+    const cubiesInLayer = getCubiesInLayer(cube, axis, layer);
+    
     // Convert degrees to radians for mathjs
     const radians = theta * Math.PI / 180;
-    // Calculate the new rotation matrix based on radians
-    const R: math.Matrix = math.rotationMatrix(radians, math.matrix(faceUnitVec));
+    
+    // Calculate the rotation matrix
+    const R: math.Matrix = math.rotationMatrix(radians, math.matrix(axisVec));
 
-    for (const cubie of cubiesOfFace) {
+    for (const cubie of cubiesInLayer) {
         // Update rotation matrix of each Cubie
         cubie.rotation = math.multiply(R, cubie.rotation);
+        
         // Update position
         const rotatedPosMatrix: math.Matrix = math.multiply(R, cubie.position);
-        // Convert to array
         const rotatedPosArray = rotatedPosMatrix.toArray().flat();
-        // Update with final position, round just in case
+        
+        // Update with final position, round to handle floating point
         cubie.position = rotatedPosArray.map(
             coord => Math.round(Number(coord))
         ) as Vec3;
     }
 }
 
-// Helper function to construct array of relevant cubies
-function getCubiesOfFace(cube: Cube, faceIndex: number, faceSign: number): Cubie[] {
-    // There are 26 Cubies on a 3^3 Cube
+// Helper function to get cubies in a specific layer
+function getCubiesInLayer(cube: Cube, axis: number, layer: number): Cubie[] {
     if (cube.cubies.length !== 26) {
         throw new Error(`Cube doesn't have 26 Cubies, it has ${cube.cubies.length} Cubies!`);
     }
 
-    const cubiesOfFace: Cubie[] = cube.cubies.filter(
-        cubie => cubie.position[faceIndex] === faceSign
+    const cubiesInLayer = cube.cubies.filter(
+        cubie => cubie.position[axis] === layer
     );
 
-    // A Face has 9 Cubies
-    if (cubiesOfFace.length != 9) {
-        throw new Error(`cubiesOfFace array is the wrong size! It has ${cubiesOfFace.length} Cubies.`);
+    // Outer layers have 9 cubies, middle layers have 8 (no center-center)
+    const expectedCount = layer === 0 ? 8 : 9;
+    if (cubiesInLayer.length !== expectedCount) {
+        throw new Error(`Layer has wrong number of cubies! Expected ${expectedCount}, got ${cubiesInLayer.length}`);
     }
 
-    return cubiesOfFace;
+    return cubiesInLayer;
 }
