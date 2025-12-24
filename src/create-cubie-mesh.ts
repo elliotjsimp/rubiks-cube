@@ -4,28 +4,34 @@ import type { Cubie, Face, Color } from './cubie';
 import { COLOR_HEX_MAP, CUBIE_SIZE, CUBIE_RADIUS, CUBIE_SEGMENTS, 
     STICKER_SIZE, STICKER_RADIUS, STICKER_OFFSET, CUBIE_SPACING } from './constants';
 
-export function createCubieMesh(cubie: Cubie): THREE.Group {
+export function createCubieMesh(cubie: Cubie, cubieIndex: number): THREE.Group {
     const group = new THREE.Group();
+    
+    // Store reference to cubie data for interaction system
+    group.userData.cubieIndex = cubieIndex;
+    group.userData.cubie = cubie;
 
     // Black Cubie core (rounded)
     const coreGeo = new RoundedBoxGeometry(CUBIE_SIZE, CUBIE_SIZE, CUBIE_SIZE, CUBIE_SEGMENTS, CUBIE_RADIUS);
     const coreMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
     const core = new THREE.Mesh(coreGeo, coreMat);
+    core.name = 'core';
     group.add(core);
 
     // Add colored stickers for each visible Face
     for (const [faceName, color] of Object.entries(cubie.faceColors)) {
         const sticker = createSticker(faceName as Face, color as Color);
+        sticker.name = 'sticker';
         group.add(sticker);
     }
 
     // Position the group with coordinate system conversion:
-    // My [x, y, z] = [right, front, up]
+    // Our [x, y, z] = [right, front, up]
     // ThreeJS needs [x, y, z] = [right, up, front]
     group.position.set(
-        cubie.position[0] * CUBIE_SPACING,  // X: my right --> ThreeJS right
-        cubie.position[2] * CUBIE_SPACING,  // Y: my up (Z) --> ThreeJS Y
-        cubie.position[1] * CUBIE_SPACING   // Z: my front (Y) --> ThreeJS Z
+        cubie.position[0] * CUBIE_SPACING,  // X: our right --> ThreeJS right
+        cubie.position[2] * CUBIE_SPACING,  // Y: our up (Z) --> ThreeJS Y
+        cubie.position[1] * CUBIE_SPACING   // Z: our front (Y) --> ThreeJS Z
     );
 
     // Apply the rotation matrix
@@ -34,7 +40,7 @@ export function createCubieMesh(cubie: Cubie): THREE.Group {
     const threeMatrix = new THREE.Matrix4();
     
     // Build the 4x4 matrix with coordinate system conversion
-    // My rotation is in Z-up space, need to convert to Y-up
+    // Our rotation is in Z-up space, need to convert to Y-up
     threeMatrix.set(
         rotArray[0][0], rotArray[0][2], rotArray[0][1], 0,
         rotArray[2][0], rotArray[2][2], rotArray[2][1], 0,
@@ -97,36 +103,36 @@ function createRoundedRectGeometry(width: number, height: number, radius: number
 }
 
 // Position stickers directly in ThreeJS coordinate system
-// My system: right=+X, front=+Y, up=+Z
+// Our system: right=+X, front=+Y, up=+Z
 // ThreeJS:   right=+X, up=+Y, front=+Z
 function positionAndRotateSticker(sticker: THREE.Mesh, face: Face): void {
     switch (face) {
-        case 'right': // My +X --> ThreeJS +X
+        case 'right': // Our +X --> ThreeJS +X
             sticker.position.set(STICKER_OFFSET, 0, 0);
             sticker.rotation.y = Math.PI / 2;
             break;
 
-        case 'left': // My -X --> ThreeJS -X
+        case 'left': // Our -X --> ThreeJS -X
             sticker.position.set(-STICKER_OFFSET, 0, 0);
             sticker.rotation.y = -Math.PI / 2;
             break;
 
-        case 'up': // My +Z --> ThreeJS +Y
+        case 'up': // Our +Z --> ThreeJS +Y
             sticker.position.set(0, STICKER_OFFSET, 0);
             sticker.rotation.x = -Math.PI / 2;
             break;
 
-        case 'down': // My -Z --> ThreeJS -Y
+        case 'down': // Our -Z --> ThreeJS -Y
             sticker.position.set(0, -STICKER_OFFSET, 0);
             sticker.rotation.x = Math.PI / 2;
             break;
 
-        case 'front': // My +Y --> ThreeJS +Z
+        case 'front': // Our +Y --> ThreeJS +Z
             sticker.position.set(0, 0, STICKER_OFFSET);
             // Default plane faces +Z, no rotation needed
             break;
 
-        case 'back': // My -Y --> ThreeJS -Z
+        case 'back': // Our -Y --> ThreeJS -Z
             sticker.position.set(0, 0, -STICKER_OFFSET);
             sticker.rotation.y = Math.PI;
             break;
