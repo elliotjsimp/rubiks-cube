@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 import { Cube } from './cube';
 import { createCubieMesh } from './create-cubie-mesh';
+import { InteractionController } from './interaction/interaction-controller';
 
 function App() {
     const containerRef = useRef<HTMLDivElement>(null)
@@ -24,7 +25,7 @@ function App() {
         const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
         
         // Store default camera position and target
-        const defaultCameraPosition = new THREE.Vector3(3, 2, 5);
+        const defaultCameraPosition = new THREE.Vector3(3, 3, 7);
         const defaultTarget = new THREE.Vector3(0, 0, 0);
 
         // Camera position/angle
@@ -48,8 +49,8 @@ function App() {
         scene.add(cubeGroup);
 
         // Create mesh groups for all 26 cubies
-        rubiksCube.cubies.forEach(cubie => {
-            const cubieGroup = createCubieMesh(cubie);
+        rubiksCube.cubies.forEach((cubie, index) => {
+            const cubieGroup = createCubieMesh(cubie, index);
             cubeGroup.add(cubieGroup);
         });
 
@@ -69,6 +70,15 @@ function App() {
         };
         
         controls.addEventListener('start', onControlsStart);
+        
+        // Set up interaction controller for direct cube manipulation
+        const interactionController = new InteractionController(
+            camera,
+            canvas,
+            cubeGroup,
+            rubiksCube,
+            controls
+        );
         
         // Animation loop
         function animate() {
@@ -96,6 +106,7 @@ function App() {
         return () => {
             window.removeEventListener('resize', handleResize)
             controls.removeEventListener('start', onControlsStart);
+            interactionController.dispose();
             controls.dispose();
             renderer.setAnimationLoop(null)
             if (containerRef.current && canvas.parentNode) {
